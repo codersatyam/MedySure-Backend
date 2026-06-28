@@ -2,8 +2,6 @@ const config = require('./config');
 const logger = require('./shared/logger');
 const createContainer = require('./bootstrap/container');
 const createApp = require('./app');
-const { closeRedisClient } = require('./shared/redis/client');
-const { closeAllQueues } = require('./shared/queues/queue.client');
 
 const start = () => {
   try {
@@ -26,23 +24,8 @@ const start = () => {
     const shutdown = (signal) => {
       logger.info(`${signal} received. Starting graceful shutdown...`);
 
-      server.close(async () => {
+      server.close(() => {
         logger.info('HTTP server closed');
-
-        try {
-          await closeRedisClient();
-          logger.info('Redis connection closed');
-        } catch (err) {
-          logger.error('Error closing Redis', { error: err.message });
-        }
-
-        try {
-          await closeAllQueues();
-          logger.info('Queues closed');
-        } catch (err) {
-          logger.error('Error closing queues', { error: err.message });
-        }
-
         logger.info('Graceful shutdown complete');
         process.exit(0);
       });
