@@ -1,13 +1,16 @@
 # CLAUDE.md - Claude Code Instructions for MedySure Backend
 
 ## Project Overview
-MedySure is a healthcare management platform backend built with Node.js, Express.js, Supabase (PostgreSQL + Auth), Redis, and BullMQ.
+MedySure is a healthcare management platform backend built with Node.js, Express.js, Supabase (PostgreSQL + Auth).
+
+## Notes
+- This project should be simple not complex with good security
 
 ## Architecture
 - **Pattern**: Feature-based modular architecture with constructor-based dependency injection
 - **Layers**: Controller → Service → Repository → Supabase PostgreSQL
 - **DI Container**: `src/bootstrap/container.js` wires all dependencies
-- **Singletons**: Supabase clients, Redis, Logger — created once, injected into everything
+- **Singletons**: Supabase clients, Logger — created once, injected into everything
 
 ## Key Commands
 - `npm run dev` — Start development server with nodemon
@@ -15,7 +18,6 @@ MedySure is a healthcare management platform backend built with Node.js, Express
 - `npm test` — Run all tests
 - `npm run test:unit` — Run unit tests only
 - `npm run lint` — Run ESLint
-- `npm run worker` — Start background workers
 
 ## Code Style Rules
 - Use constructor-based DI — never import singletons directly in business logic

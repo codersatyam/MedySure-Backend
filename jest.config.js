@@ -7,7 +7,6 @@ module.exports = {
   collectCoverageFrom: [
     'src/**/*.js',
     '!src/server.js',
-    '!src/workers/index.js',
   ],
   coverageDirectory: 'coverage',
   coverageThreshold: {

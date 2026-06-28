@@ -1,8 +1,7 @@
 // TODO: Implement Dashboard service methods
 class DashboardService {
-  constructor({ dashboardRepository, redisClient, logger }) {
+  constructor({ dashboardRepository, logger }) {
     this.dashboardRepo = dashboardRepository;
-    this.redisClient = redisClient;
     this.logger = logger;
   }
 }

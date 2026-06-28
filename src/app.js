@@ -11,21 +11,8 @@ const requestIdMiddleware = require('./middlewares/requestId.middleware');
 const sanitizeMiddleware = require('./middlewares/sanitize.middleware');
 const errorHandler = require('./middlewares/errorHandler.middleware');
 const notFoundHandler = require('./middlewares/notFound.middleware');
-// const createAuthMiddleware = require('./middlewares/auth.middleware');
-// const createAuditMiddleware = require('./middlewares/audit.middleware');
+const { createHealthRoutes } = require('./modules/health');
 
-// --- Module route imports (commented out — modules stripped to skeletons) ---
-// const { createAuthRoutes } = require('./modules/auth');
-// const { createUserRoutes } = require('./modules/users');
-// const { createPatientRoutes } = require('./modules/patients');
-// const { createDoctorRoutes } = require('./modules/doctors');
-// const { createAppointmentRoutes } = require('./modules/appointments');
-// const { createDashboardRoutes } = require('./modules/dashboard');
-// const { createNotificationRoutes } = require('./modules/notifications');
-// const { createStaffRoutes } = require('./modules/staff');
-// const { createAnalyticsRoutes } = require('./modules/analytics');
-// const { createBillingRoutes } = require('./modules/billing');
-// const { createSettingsRoutes } = require('./modules/settings');
 
 const config = require('./config');
 const logger = require('./shared/logger');
@@ -61,51 +48,21 @@ const createApp = (container) => {
   // --- Rate limiting ---
   app.use(globalLimiter);
 
+  const apiPrefix = `/api/${config.apiVersion}`;
+
   // --- Health check (unauthenticated) ---
-  app.get('/api/v1/health', async (_req, res) => {
-    const health = {
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      environment: config.env,
-      services: {
-        database: 'unknown',
-        redis: 'unknown',
-      },
-    };
-
-    // Check Supabase
-    try {
-      const { error } = await container.supabaseAdmin.from('roles').select('id').limit(1);
-      health.services.database = error ? 'error' : 'ok';
-    } catch {
-      health.services.database = 'error';
-    }
-
-    // Check Redis
-    try {
-      await container.redisClient.ping();
-      health.services.redis = 'ok';
-    } catch {
-      health.services.redis = 'error';
-    }
-
-    const isHealthy = health.services.database === 'ok';
-    res.status(isHealthy ? 200 : 503).json(health);
-  });
+  // GET /api/v1/health       — liveness (server is up)
+  // GET /api/v1/health/ready  — readiness (server + dependencies are ready)
+  app.use(`${apiPrefix}/health`, createHealthRoutes({ healthController: container.healthController }));
 
   // --- API Routes (commented out — modules stripped to skeletons) ---
   // Uncomment as modules are rebuilt:
   //
   // const authMiddleware = createAuthMiddleware({
   //   supabaseClient: container.supabaseClient,
-  //   redisClient: container.redisClient,
   //   logger: container.logger,
   // });
   //
-  // const apiPrefix = `/api/${config.apiVersion}`;
-  //
-  // app.use(`${apiPrefix}/auth`, createAuthRoutes({ ... }));
   // app.use(`${apiPrefix}/users`, createUserRoutes({ ... }));
   // app.use(`${apiPrefix}/patients`, createPatientRoutes({ ... }));
   // app.use(`${apiPrefix}/doctors`, createDoctorRoutes({ ... }));

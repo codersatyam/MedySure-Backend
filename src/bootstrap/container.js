@@ -1,11 +1,10 @@
 const { getSupabaseClient } = require('../shared/database/supabase.client');
 const { getSupabaseAdmin } = require('../shared/database/supabase.admin');
-const { getRedisClient } = require('../shared/redis/client');
 const logger = require('../shared/logger');
-const { getNotificationQueue, getEmailQueue } = require('../shared/queues/queues');
+const config = require('../config');
+const { HealthController } = require('../modules/health');
 
 // --- Module imports (commented out — modules stripped to skeletons) ---
-// const { AuthController, AuthService, AuthRepository } = require('../modules/auth');
 // const { UserController, UserService, UserRepository } = require('../modules/users');
 // const { PatientController, PatientService, PatientRepository } = require('../modules/patients');
 // const { DoctorController, DoctorService, DoctorRepository } = require('../modules/doctors');
@@ -21,20 +20,11 @@ const createContainer = () => {
   // --- Singletons ---
   const supabaseClient = getSupabaseClient();
   const supabaseAdmin = getSupabaseAdmin();
-  const redisClient = getRedisClient();
 
-  // --- Queues (lazy, safe to fail) ---
-  let notificationQueue = null;
-  let emailQueue = null;
-  try {
-    notificationQueue = getNotificationQueue();
-    emailQueue = getEmailQueue();
-  } catch (err) {
-    logger.warn('Queue initialization skipped (Redis may not be available)', { error: err.message });
-  }
+  // --- Controllers (always available) ---
+  const healthController = new HealthController({ supabaseAdmin, config });
 
   // --- Repositories (commented out — modules stripped to skeletons) ---
-  // const authRepository = new AuthRepository({ supabaseAdmin });
   // const userRepository = new UserRepository({ supabaseAdmin });
   // const patientRepository = new PatientRepository({ supabaseAdmin });
   // const doctorRepository = new DoctorRepository({ supabaseAdmin });
@@ -47,22 +37,18 @@ const createContainer = () => {
   // const settingsRepository = new SettingsRepository({ supabaseAdmin });
 
   // --- Services (commented out — modules stripped to skeletons) ---
-  // const authService = new AuthService({ authRepository, redisClient, logger });
-  // const userService = new UserService({ userRepository, redisClient, logger });
+  // const userService = new UserService({ userRepository, logger });
   // const patientService = new PatientService({ patientRepository, logger });
-  // const doctorService = new DoctorService({ doctorRepository, redisClient, logger });
-  // const appointmentService = new AppointmentService({
-  //   appointmentRepository, redisClient, logger, notificationQueue,
-  // });
-  // const dashboardService = new DashboardService({ dashboardRepository, redisClient, logger });
+  // const doctorService = new DoctorService({ doctorRepository, logger });
+  // const appointmentService = new AppointmentService({ appointmentRepository, logger });
+  // const dashboardService = new DashboardService({ dashboardRepository, logger });
   // const notificationService = new NotificationService({ notificationRepository, logger });
   // const staffService = new StaffService({ staffRepository, logger });
-  // const analyticsService = new AnalyticsService({ analyticsRepository, redisClient, logger });
+  // const analyticsService = new AnalyticsService({ analyticsRepository, logger });
   // const billingService = new BillingService({ billingRepository, logger });
-  // const settingsService = new SettingsService({ settingsRepository, redisClient, logger });
+  // const settingsService = new SettingsService({ settingsRepository, logger });
 
   // --- Controllers (commented out — modules stripped to skeletons) ---
-  // const authController = new AuthController({ authService });
   // const userController = new UserController({ userService });
   // const patientController = new PatientController({ patientService });
   // const doctorController = new DoctorController({ doctorService });
@@ -78,13 +64,12 @@ const createContainer = () => {
     // Singletons
     supabaseClient,
     supabaseAdmin,
-    redisClient,
     logger,
-    emailQueue,
-    notificationQueue,
+
+    // Controllers
+    healthController,
 
     // Repositories — uncomment as modules are rebuilt
-    // authRepository,
     // userRepository,
     // patientRepository,
     // doctorRepository,
@@ -97,7 +82,6 @@ const createContainer = () => {
     // settingsRepository,
 
     // Services — uncomment as modules are rebuilt
-    // authService,
     // userService,
     // patientService,
     // doctorService,
@@ -110,7 +94,6 @@ const createContainer = () => {
     // settingsService,
 
     // Controllers — uncomment as modules are rebuilt
-    // authController,
     // userController,
     // patientController,
     // doctorController,

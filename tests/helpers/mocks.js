@@ -38,28 +38,12 @@ const createMockSupabaseClient = () => {
   };
 };
 
-const createMockRedisClient = () => ({
-  get: jest.fn().mockResolvedValue(null),
-  set: jest.fn().mockResolvedValue('OK'),
-  setex: jest.fn().mockResolvedValue('OK'),
-  del: jest.fn().mockResolvedValue(1),
-  keys: jest.fn().mockResolvedValue([]),
-  ttl: jest.fn().mockResolvedValue(-2),
-  ping: jest.fn().mockResolvedValue('PONG'),
-  quit: jest.fn().mockResolvedValue('OK'),
-});
-
 const createMockLogger = () => ({
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
   debug: jest.fn(),
   http: jest.fn(),
-});
-
-const createMockQueue = () => ({
-  add: jest.fn().mockResolvedValue({ id: 'mock-job-id' }),
-  close: jest.fn().mockResolvedValue(undefined),
 });
 
 const createMockRequest = (overrides = {}) => ({
@@ -90,9 +74,7 @@ const createMockNext = () => jest.fn();
 
 module.exports = {
   createMockSupabaseClient,
-  createMockRedisClient,
   createMockLogger,
-  createMockQueue,
   createMockRequest,
   createMockResponse,
   createMockNext,

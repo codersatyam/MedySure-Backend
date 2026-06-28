@@ -1,21 +1,15 @@
 const createAuthMiddleware = require('../../../src/middlewares/auth.middleware');
-const { createMockSupabaseClient, createMockRedisClient, createMockLogger, createMockRequest, createMockResponse, createMockNext } = require('../../helpers/mocks');
+const { createMockSupabaseClient, createMockRequest, createMockResponse, createMockNext } = require('../../helpers/mocks');
 
 describe('Auth Middleware', () => {
   let authMiddleware;
   let mockSupabase;
-  let mockRedis;
-  let mockLogger;
 
   beforeEach(() => {
     mockSupabase = createMockSupabaseClient();
-    mockRedis = createMockRedisClient();
-    mockLogger = createMockLogger();
 
     authMiddleware = createAuthMiddleware({
       supabaseClient: mockSupabase,
-      redisClient: mockRedis,
-      logger: mockLogger,
     });
   });
 
@@ -48,28 +42,26 @@ describe('Auth Middleware', () => {
     expect(error.statusCode).toBe(401);
   });
 
-  it('should set req.user from Redis cache if available', async () => {
-    const cachedSession = {
-      id: 'user-123',
-      email: 'test@test.com',
-      roles: ['admin'],
-      permissions: ['patient:read'],
-    };
-
+  it('should build req.user from the database when the token is valid', async () => {
     const req = createMockRequest({
       headers: { authorization: 'Bearer valid-token' },
     });
     const next = createMockNext();
 
     mockSupabase.auth.getUser.mockResolvedValue({
-      data: { user: { id: 'user-123' } },
+      data: { user: { id: 'user-123', email: 'test@test.com' } },
       error: null,
     });
-    mockRedis.get.mockResolvedValue(JSON.stringify(cachedSession));
 
     await authMiddleware(req, createMockResponse(), next);
 
-    expect(req.user).toEqual(cachedSession);
+    expect(req.user).toEqual({
+      id: 'user-123',
+      email: 'test@test.com',
+      profile: null,
+      roles: [],
+      permissions: [],
+    });
     expect(next).toHaveBeenCalledWith();
   });
 });

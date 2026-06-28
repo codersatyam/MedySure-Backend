@@ -5,6 +5,8 @@ MedySure Backend — Node.js + Express healthcare management API with Supabase, 
 
 ## Architecture Rules
 
+Code should be simple not complex but not compromise with security.
+
 ### 1. Module Structure
 Every feature module MUST follow this structure:
 ```
