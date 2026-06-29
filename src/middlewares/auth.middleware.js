@@ -1,6 +1,10 @@
 const { UnauthorizedError } = require('../shared/errors');
+const { loadUserPermissions } = require('../shared/utils/permissions');
 
-const createAuthMiddleware = ({ supabaseClient }) => {
+const createAuthMiddleware = ({ supabaseClient, supabaseAdmin }) => {
+  // Reads use the admin client so they aren't subject to RLS on profiles /
+  // permission tables (and don't expose PII through the anon client).
+  const db = supabaseAdmin || supabaseClient;
   return async (req, _res, next) => {
     try {
       const authHeader = req.headers.authorization;
@@ -19,39 +23,23 @@ const createAuthMiddleware = ({ supabaseClient }) => {
         throw new UnauthorizedError('Invalid or expired token');
       }
 
-      // Fetch profile, roles and permissions from the database
-      const { data: profile } = await supabaseClient
+      // Profile (carries org membership)
+      const { data: profile } = await db
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
 
-      const { data: userRoles } = await supabaseClient
-        .from('user_roles')
-        .select(`
-          roles (
-            name,
-            role_permissions (
-              permissions (resource, action)
-            )
-          )
-        `)
-        .eq('user_id', user.id);
-
-      const roles = userRoles?.map((ur) => ur.roles.name) || [];
-      const permissions = [];
-      userRoles?.forEach((ur) => {
-        ur.roles.role_permissions?.forEach((rp) => {
-          permissions.push(`${rp.permissions.resource}:${rp.permissions.action}`);
-        });
-      });
+      // Effective permissions = assigned groups UNION direct grants
+      const { permissions, groups } = await loadUserPermissions(db, user.id);
 
       req.user = {
         id: user.id,
         email: user.email,
         profile,
-        roles,
-        permissions: [...new Set(permissions)],
+        orgId: profile?.org_id || null,
+        groups,
+        permissions,
       };
       next();
     } catch (err) {

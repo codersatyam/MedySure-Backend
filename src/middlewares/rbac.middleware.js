@@ -1,5 +1,8 @@
 const { ForbiddenError } = require('../shared/errors');
 
+// Full-access wildcard granted via the Owner permission group.
+const FULL_ACCESS = '*:*';
+
 const authorize = (...requiredPermissions) => {
   return (req, _res, next) => {
     if (!req.user) {
@@ -8,8 +11,8 @@ const authorize = (...requiredPermissions) => {
 
     const userPermissions = req.user.permissions || [];
 
-    // Super admin bypasses all permission checks
-    if (req.user.roles && req.user.roles.includes('super_admin')) {
+    // Holders of the full-access wildcard bypass all permission checks.
+    if (userPermissions.includes(FULL_ACCESS)) {
       return next();
     }
 
@@ -29,21 +32,4 @@ const authorize = (...requiredPermissions) => {
   };
 };
 
-const authorizeRoles = (...roles) => {
-  return (req, _res, next) => {
-    if (!req.user) {
-      return next(new ForbiddenError('User not authenticated'));
-    }
-
-    const userRoles = req.user.roles || [];
-    const hasRole = roles.some((role) => userRoles.includes(role));
-
-    if (!hasRole) {
-      return next(new ForbiddenError('Insufficient role privileges'));
-    }
-
-    next();
-  };
-};
-
-module.exports = { authorize, authorizeRoles };
+module.exports = { authorize };

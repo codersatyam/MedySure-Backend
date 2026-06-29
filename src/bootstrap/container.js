@@ -3,6 +3,8 @@ const { getSupabaseAdmin } = require('../shared/database/supabase.admin');
 const logger = require('../shared/logger');
 const config = require('../config');
 const { HealthController } = require('../modules/health');
+const { AuthController, AuthService } = require('../modules/auth');
+const { DemoController, DemoService, DemoRepository } = require('../modules/demo');
 
 // --- Module imports (commented out — modules stripped to skeletons) ---
 // const { UserController, UserService, UserRepository } = require('../modules/users');
@@ -23,6 +25,15 @@ const createContainer = () => {
 
   // --- Controllers (always available) ---
   const healthController = new HealthController({ supabaseAdmin, config });
+
+  // --- Auth ---
+  const authService = new AuthService({ supabaseClient, supabaseAdmin, logger, config });
+  const authController = new AuthController({ authService });
+
+  // --- Demo requests (public) ---
+  const demoRepository = new DemoRepository({ supabaseAdmin });
+  const demoService = new DemoService({ demoRepository, logger });
+  const demoController = new DemoController({ demoService });
 
   // --- Repositories (commented out — modules stripped to skeletons) ---
   // const userRepository = new UserRepository({ supabaseAdmin });
@@ -68,6 +79,15 @@ const createContainer = () => {
 
     // Controllers
     healthController,
+    authController,
+    demoController,
+
+    // Services
+    authService,
+    demoService,
+
+    // Repositories
+    demoRepository,
 
     // Repositories — uncomment as modules are rebuilt
     // userRepository,
