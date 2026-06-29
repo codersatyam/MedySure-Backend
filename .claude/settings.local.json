@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const c=require\\('./src/bootstrap/container'\\); const x=c\\(\\); console.log\\('container keys:', Object.keys\\(x\\)\\); console.log\\('OK: container builds'\\)\")",
+      "Bash(npm install *)",
+      "Bash(SUPABASE_URL=\"https://dummy.supabase.co\" SUPABASE_ANON_KEY=\"dummy-anon-key\" SUPABASE_SERVICE_ROLE_KEY=\"dummy-service-role-key\" SUPABASE_JWT_SECRET=\"dummy-jwt-secret\" NODE_ENV=\"development\" PORT=3000 npm start *)",
+      "Bash(curl -s -w \"\\\\nHTTP %{http_code}\\\\n\" http://localhost:3000/api/v1/health)",
+      "Bash(curl -s -w \"\\\\nHTTP %{http_code}\\\\n\" http://localhost:3000/api/v1/health/ready)",
+      "Bash(curl -s -I http://localhost:3000/api/v1/health)",
+      "Bash(lsof -nP -iTCP:3000 -sTCP:LISTEN)",
+      "Bash(ps -o pid,ppid,command -p 25449,92894)",
+      "Bash(curl -s -w \"\\\\nHTTP %{http_code}\\\\n\" http://127.0.0.1:3000/api/v1/health)",
+      "Bash(curl -s -w \"\\\\nHTTP %{http_code}\\\\n\" http://127.0.0.1:3000/api/v1/health/ready)"
+    ]
+  }
+}

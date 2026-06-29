@@ -5,11 +5,15 @@ describe('Auth Middleware', () => {
   let authMiddleware;
   let mockSupabase;
 
+  let mockAdmin;
+
   beforeEach(() => {
     mockSupabase = createMockSupabaseClient();
+    mockAdmin = createMockSupabaseClient();
 
     authMiddleware = createAuthMiddleware({
       supabaseClient: mockSupabase,
+      supabaseAdmin: mockAdmin,
     });
   });
 
@@ -59,7 +63,8 @@ describe('Auth Middleware', () => {
       id: 'user-123',
       email: 'test@test.com',
       profile: null,
-      roles: [],
+      orgId: null,
+      groups: [],
       permissions: [],
     });
     expect(next).toHaveBeenCalledWith();

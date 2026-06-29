@@ -1,3 +1,6 @@
+// Load environment variables from .env before anything reads process.env.
+require('dotenv').config();
+
 const config = require('./config');
 const logger = require('./shared/logger');
 const createContainer = require('./bootstrap/container');

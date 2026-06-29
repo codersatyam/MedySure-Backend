@@ -6,11 +6,18 @@ const envSchema = Joi.object({
   API_VERSION: Joi.string().default('v1'),
 
   SUPABASE_URL: Joi.string().uri().required(),
-  SUPABASE_ANON_KEY: Joi.string().required(),
-  SUPABASE_SERVICE_ROLE_KEY: Joi.string().required(),
-  SUPABASE_JWT_SECRET: Joi.string().required(),
+  // New Supabase API key format (preferred).
+  SUPABASE_PUBLISHABLE_KEY: Joi.string(),
+  SUPABASE_SECRET_KEY: Joi.string(),
+  SUPABASE_JWKS_URL: Joi.string().uri(),
+  // Legacy key format (fallback / backward compatibility).
+  SUPABASE_ANON_KEY: Joi.string(),
+  SUPABASE_SERVICE_ROLE_KEY: Joi.string(),
+  SUPABASE_JWT_SECRET: Joi.string(),
 
   CORS_ORIGIN: Joi.string().default('http://localhost:5173'),
+  APP_URL: Joi.string().uri().default('http://localhost:5173'),
+  OAUTH_REDIRECT_URL: Joi.string().uri().optional(),
 
   RATE_LIMIT_WINDOW_MS: Joi.number().default(900000),
   RATE_LIMIT_MAX_REQUESTS: Joi.number().default(100),
@@ -36,6 +43,19 @@ if (error) {
   process.exit(1);
 }
 
+// Accept either the new (publishable/secret) or legacy (anon/service-role) keys.
+const anonKey = env.SUPABASE_PUBLISHABLE_KEY || env.SUPABASE_ANON_KEY;
+const serviceRoleKey = env.SUPABASE_SECRET_KEY || env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!anonKey || !serviceRoleKey) {
+  console.error(
+    '\n  Config validation error:\n' +
+    '  Supabase keys missing. Set SUPABASE_PUBLISHABLE_KEY + SUPABASE_SECRET_KEY' +
+    ' (or the legacy SUPABASE_ANON_KEY + SUPABASE_SERVICE_ROLE_KEY).\n'
+  );
+  process.exit(1);
+}
+
 const config = {
   env: env.NODE_ENV,
   isDev: env.NODE_ENV === 'development',
@@ -46,14 +66,20 @@ const config = {
 
   supabase: {
     url: env.SUPABASE_URL,
-    anonKey: env.SUPABASE_ANON_KEY,
-    serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
+    anonKey,
+    serviceRoleKey,
+    jwksUrl: env.SUPABASE_JWKS_URL,
     jwtSecret: env.SUPABASE_JWT_SECRET,
   },
 
   cors: {
     origin: env.CORS_ORIGIN,
   },
+
+  appUrl: env.APP_URL,
+  // Where Supabase redirects after email confirmation / OAuth. Defaults to the
+  // frontend's /auth/callback route.
+  oauthRedirectUrl: env.OAUTH_REDIRECT_URL || `${env.APP_URL}/auth/callback`,
 
   rateLimit: {
     windowMs: env.RATE_LIMIT_WINDOW_MS,

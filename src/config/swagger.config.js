@@ -14,6 +14,11 @@ const swaggerConfig = {
         description: 'Development server',
       },
     ],
+    tags: [
+      { name: 'Auth', description: 'Sign up, sign in and session management' },
+      { name: 'Demo', description: 'Public demo-request capture' },
+      { name: 'Health', description: 'Liveness and readiness probes' },
+    ],
     components: {
       securitySchemes: {
         bearerAuth: {
@@ -22,8 +27,50 @@ const swaggerConfig = {
           bearerFormat: 'JWT',
         },
       },
+      schemas: {
+        Session: {
+          type: 'object',
+          properties: {
+            accessToken: { type: 'string' },
+            refreshToken: { type: 'string' },
+            expiresAt: { type: 'integer', example: 1735689600 },
+            tokenType: { type: 'string', example: 'bearer' },
+          },
+        },
+        AuthUser: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            email: { type: 'string', format: 'email' },
+          },
+        },
+        ErrorResponse: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: false },
+            error: {
+              type: 'object',
+              properties: {
+                code: { type: 'string', example: 'VALIDATION_ERROR' },
+                message: { type: 'string' },
+                details: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      field: { type: 'string' },
+                      message: { type: 'string' },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
-    security: [{ bearerAuth: [] }],
+    // Endpoints are public by default; protected ones declare security per-operation.
+    security: [],
   },
   apis: ['./src/modules/*/routes/*.js'],
 };

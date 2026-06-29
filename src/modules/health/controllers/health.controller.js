@@ -30,7 +30,7 @@ class HealthController {
     };
 
     try {
-      const { error } = await this.supabaseAdmin.from('roles').select('id').limit(1);
+      const { error } = await this.supabaseAdmin.from('organizations').select('id').limit(1);
       health.services.database = error ? 'error' : 'ok';
     } catch {
       health.services.database = 'error';

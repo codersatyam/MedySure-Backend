@@ -1,17 +1,26 @@
+const fs = require('fs');
+const path = require('path');
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const compression = require('compression');
 const morgan = require('morgan');
 const hpp = require('hpp');
+const swaggerUi = require('swagger-ui-express');
+const swaggerJsdoc = require('swagger-jsdoc');
 
 const corsOptions = require('./config/cors.config');
+const swaggerConfig = require('./config/swagger.config');
 const { globalLimiter } = require('./middlewares/rateLimiter.middleware');
 const requestIdMiddleware = require('./middlewares/requestId.middleware');
 const sanitizeMiddleware = require('./middlewares/sanitize.middleware');
 const errorHandler = require('./middlewares/errorHandler.middleware');
 const notFoundHandler = require('./middlewares/notFound.middleware');
 const { createHealthRoutes } = require('./modules/health');
+const { createAuthRoutes } = require('./modules/auth');
+const { createDemoRoutes } = require('./modules/demo');
+const createAuthMiddleware = require('./middlewares/auth.middleware');
+const { authLimiter, publicFormLimiter } = require('./middlewares/rateLimiter.middleware');
 
 
 const config = require('./config');
@@ -50,10 +59,42 @@ const createApp = (container) => {
 
   const apiPrefix = `/api/${config.apiVersion}`;
 
+  // --- API docs (Swagger UI) ---
+  // GET /api/v1/docs        — interactive Swagger UI
+  // GET /api/v1/docs.json   — raw OpenAPI spec
+  // Prefer the committed swagger.json (source of truth, regenerate via
+  // `npm run swagger:gen`); fall back to generating from JSDoc at runtime.
+  const swaggerJsonPath = path.join(__dirname, '..', 'swagger.json');
+  let openapiSpec;
+  try {
+    openapiSpec = JSON.parse(fs.readFileSync(swaggerJsonPath, 'utf8'));
+  } catch {
+    openapiSpec = swaggerJsdoc(swaggerConfig);
+  }
+  app.get(`${apiPrefix}/docs.json`, (_req, res) => res.json(openapiSpec));
+  app.use(`${apiPrefix}/docs`, swaggerUi.serve, swaggerUi.setup(openapiSpec));
+
   // --- Health check (unauthenticated) ---
   // GET /api/v1/health       — liveness (server is up)
   // GET /api/v1/health/ready  — readiness (server + dependencies are ready)
   app.use(`${apiPrefix}/health`, createHealthRoutes({ healthController: container.healthController }));
+
+  // --- Auth (signup / login / logout / refresh / oauth / me) ---
+  const authMiddleware = createAuthMiddleware({
+    supabaseClient: container.supabaseClient,
+    supabaseAdmin: container.supabaseAdmin,
+  });
+  app.use(`${apiPrefix}/auth`, createAuthRoutes({
+    authController: container.authController,
+    authMiddleware,
+    authLimiter,
+  }));
+
+  // --- Demo requests (public, no auth) ---
+  app.use(`${apiPrefix}/demo-requests`, createDemoRoutes({
+    demoController: container.demoController,
+    demoLimiter: publicFormLimiter,
+  }));
 
   // --- API Routes (commented out — modules stripped to skeletons) ---
   // Uncomment as modules are rebuilt:

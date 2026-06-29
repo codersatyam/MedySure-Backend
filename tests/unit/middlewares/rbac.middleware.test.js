@@ -1,12 +1,12 @@
-const { authorize, authorizeRoles } = require('../../../src/middlewares/rbac.middleware');
+const { authorize } = require('../../../src/middlewares/rbac.middleware');
 const { createMockRequest, createMockResponse, createMockNext } = require('../../helpers/mocks');
 
 describe('RBAC Middleware', () => {
   describe('authorize', () => {
     it('should allow access if user has required permission', () => {
-      const middleware = authorize('patient:read');
+      const middleware = authorize('patients:read');
       const req = createMockRequest({
-        user: { roles: ['doctor'], permissions: ['patient:read', 'patient:list'] },
+        user: { permissions: ['patients:read', 'patients:write'] },
       });
       const next = createMockNext();
 
@@ -16,9 +16,9 @@ describe('RBAC Middleware', () => {
     });
 
     it('should deny access if user lacks permission', () => {
-      const middleware = authorize('patient:delete');
+      const middleware = authorize('patients:write');
       const req = createMockRequest({
-        user: { roles: ['doctor'], permissions: ['patient:read'] },
+        user: { permissions: ['patients:read'] },
       });
       const next = createMockNext();
 
@@ -29,24 +29,10 @@ describe('RBAC Middleware', () => {
       expect(error.statusCode).toBe(403);
     });
 
-    it('should allow super_admin to bypass all checks', () => {
-      const middleware = authorize('patient:delete');
+    it('should allow full-access (*:*) holders to bypass all checks', () => {
+      const middleware = authorize('patients:write');
       const req = createMockRequest({
-        user: { roles: ['super_admin'], permissions: [] },
-      });
-      const next = createMockNext();
-
-      middleware(req, createMockResponse(), next);
-
-      expect(next).toHaveBeenCalledWith();
-    });
-  });
-
-  describe('authorizeRoles', () => {
-    it('should allow access if user has required role', () => {
-      const middleware = authorizeRoles('admin', 'doctor');
-      const req = createMockRequest({
-        user: { roles: ['doctor'], permissions: [] },
+        user: { permissions: ['*:*'] },
       });
       const next = createMockNext();
 
@@ -55,16 +41,13 @@ describe('RBAC Middleware', () => {
       expect(next).toHaveBeenCalledWith();
     });
 
-    it('should deny access if user lacks required role', () => {
-      const middleware = authorizeRoles('admin');
-      const req = createMockRequest({
-        user: { roles: ['patient'], permissions: [] },
-      });
+    it('should deny access when user is not authenticated', () => {
+      const middleware = authorize('patients:read');
+      const req = createMockRequest({ user: undefined });
       const next = createMockNext();
 
       middleware(req, createMockResponse(), next);
 
-      expect(next).toHaveBeenCalled();
       const error = next.mock.calls[0][0];
       expect(error.statusCode).toBe(403);
     });
