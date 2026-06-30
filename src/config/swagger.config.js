@@ -17,6 +17,7 @@ const swaggerConfig = {
     tags: [
       { name: 'Auth', description: 'Sign up, sign in and session management' },
       { name: 'Demo', description: 'Public demo-request capture' },
+      { name: 'Doctors', description: 'Organization doctor directory' },
       { name: 'Health', description: 'Liveness and readiness probes' },
     ],
     components: {
@@ -42,6 +43,29 @@ const swaggerConfig = {
           properties: {
             id: { type: 'string', format: 'uuid' },
             email: { type: 'string', format: 'email' },
+          },
+        },
+        Doctor: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            firstName: { type: 'string', example: 'Asha' },
+            lastName: { type: 'string', example: 'Verma' },
+            email: { type: 'string', format: 'email', nullable: true },
+            phone: { type: 'string', nullable: true, example: '+919876543210' },
+            specialization: { type: 'string', nullable: true, example: 'Cardiology' },
+            qualification: {
+              type: 'array',
+              items: { type: 'string' },
+              example: ['MBBS', 'MD'],
+            },
+            age: { type: 'integer', nullable: true, example: 42 },
+            photoUrl: { type: 'string', format: 'uri', nullable: true },
+            totalExperience: { type: 'number', nullable: true, example: 12.5 },
+            consultingFees: { type: 'number', nullable: true, example: 800 },
+            licenseNumber: { type: 'string', nullable: true, example: 'MH-12345' },
+            isActive: { type: 'boolean', example: true },
+            createdAt: { type: 'string', format: 'date-time' },
           },
         },
         ErrorResponse: {

@@ -2,6 +2,7 @@ const request = require('supertest');
 const createApp = require('../../src/app');
 const { DemoController } = require('../../src/modules/demo');
 const { AuthController } = require('../../src/modules/auth');
+const { DoctorsController } = require('../../src/modules/doctors');
 const { createMockSupabaseClient } = require('../helpers/mocks');
 
 const buildApp = () => {
@@ -15,6 +16,7 @@ const buildApp = () => {
     healthController: { liveness: (_q, r) => r.json({ ok: true }), readiness: (_q, r) => r.json({ ok: true }) },
     authController: new AuthController({ authService: {} }),
     demoController: new DemoController({ demoService }),
+    doctorsController: new DoctorsController({ doctorsService: {} }),
   };
 
   return { app: createApp(container), demoService };

@@ -20,8 +20,16 @@ const createMockSupabaseClient = () => {
     single: jest.fn().mockResolvedValue({ data: null, error: null }),
   };
 
+  const mockStorageBucket = {
+    upload: jest.fn().mockResolvedValue({ data: { path: 'mock/path' }, error: null }),
+    getPublicUrl: jest.fn(() => ({ data: { publicUrl: 'https://cdn.test/mock/path.png' } })),
+  };
+
   return {
     from: jest.fn(() => mockQuery),
+    storage: {
+      from: jest.fn(() => mockStorageBucket),
+    },
     auth: {
       getUser: jest.fn(),
       admin: {
@@ -37,6 +45,7 @@ const createMockSupabaseClient = () => {
     },
     rpc: jest.fn(),
     _mockQuery: mockQuery,
+    _mockStorageBucket: mockStorageBucket,
   };
 };
 
