@@ -5,6 +5,7 @@ const config = require('../config');
 const { HealthController } = require('../modules/health');
 const { AuthController, AuthService } = require('../modules/auth');
 const { DemoController, DemoService, DemoRepository } = require('../modules/demo');
+const { DoctorsController, DoctorsService, DoctorsRepository } = require('../modules/doctors');
 
 // --- Module imports (commented out — modules stripped to skeletons) ---
 // const { UserController, UserService, UserRepository } = require('../modules/users');
@@ -34,6 +35,11 @@ const createContainer = () => {
   const demoRepository = new DemoRepository({ supabaseAdmin });
   const demoService = new DemoService({ demoRepository, logger });
   const demoController = new DemoController({ demoService });
+
+  // --- Doctors (org-scoped) ---
+  const doctorsRepository = new DoctorsRepository({ supabaseAdmin });
+  const doctorsService = new DoctorsService({ doctorsRepository, logger });
+  const doctorsController = new DoctorsController({ doctorsService });
 
   // --- Repositories (commented out — modules stripped to skeletons) ---
   // const userRepository = new UserRepository({ supabaseAdmin });
@@ -81,13 +87,16 @@ const createContainer = () => {
     healthController,
     authController,
     demoController,
+    doctorsController,
 
     // Services
     authService,
     demoService,
+    doctorsService,
 
     // Repositories
     demoRepository,
+    doctorsRepository,
 
     // Repositories — uncomment as modules are rebuilt
     // userRepository,

@@ -19,6 +19,7 @@ const notFoundHandler = require('./middlewares/notFound.middleware');
 const { createHealthRoutes } = require('./modules/health');
 const { createAuthRoutes } = require('./modules/auth');
 const { createDemoRoutes } = require('./modules/demo');
+const { createDoctorsRoutes } = require('./modules/doctors');
 const createAuthMiddleware = require('./middlewares/auth.middleware');
 const { authLimiter, publicFormLimiter } = require('./middlewares/rateLimiter.middleware');
 
@@ -94,6 +95,12 @@ const createApp = (container) => {
   app.use(`${apiPrefix}/demo-requests`, createDemoRoutes({
     demoController: container.demoController,
     demoLimiter: publicFormLimiter,
+  }));
+
+  // --- Doctors (authenticated, org-scoped) ---
+  app.use(`${apiPrefix}/doctors`, createDoctorsRoutes({
+    doctorsController: container.doctorsController,
+    authMiddleware,
   }));
 
   // --- API Routes (commented out — modules stripped to skeletons) ---

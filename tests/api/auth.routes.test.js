@@ -2,6 +2,7 @@ const request = require('supertest');
 const createApp = require('../../src/app');
 const { AuthController } = require('../../src/modules/auth');
 const { DemoController } = require('../../src/modules/demo');
+const { DoctorsController } = require('../../src/modules/doctors');
 const { createMockSupabaseClient } = require('../helpers/mocks');
 
 // Minimal container: a real AuthController backed by a stub service, plus the
@@ -22,6 +23,7 @@ const buildApp = () => {
     healthController: { liveness: (_req, res) => res.json({ ok: true }), readiness: (_req, res) => res.json({ ok: true }) },
     authController: new AuthController({ authService }),
     demoController: new DemoController({ demoService: {} }),
+    doctorsController: new DoctorsController({ doctorsService: {} }),
   };
 
   return { app: createApp(container), supabaseClient };
